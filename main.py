@@ -4,55 +4,61 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+# Benutzername anpassen!
+benutzername = "ibinc"
 
-username = "ibinc"
+# Quell- und Zielordner
+quelle = f"C:/Users/{benutzername}/Downloads"
+ziel = f"C:/Users/{benutzername}/SortierterDownload"  # neuer Zielordner
 
-source_dir = f"C:/Users/{username}/Downloads"
-destination_dir = f"C:/Users/{username}/Documents/sortiert"
-
-categories = {
-    "Bilder": [".jpg", ",png", ".jpeg", ".gif",],
+# Kategorien
+kategorien = {
+    "Bilder": [".jpg", ".png", ".jpeg", ".gif"],
     "Musik": [".mp3", ".wav", ".flac"],
-    "Dokumente": [".pdf", ".docx", ".txt", ".xlsx"],
+    "Dokumente": [".pdf", ".docx", ".txt"],
     "Videos": [".mp4", ".mov", ".avi"],
-    "Archive": [".zip", ".rar", ".7z"],
     "Sonstiges": []
 }
 
-def sort_file(path):
-    if os.path.isfile(path):
-        file = os.path.basename(path)
-        _, end = os.path.splitext(file)
-        end = end.lower()
+def sortiere_datei(pfad):
+    if os.path.isfile(pfad):
+        datei = os.path.basename(pfad)
+        _, endung = os.path.splitext(datei)
+        endung = endung.lower()
 
-        moved = False
-        for category, endings in categories.items():
-            if end in endings:
-                destination = os.path.join(destination_dir, category)
-                os.makedirs(destination, exist_ok=True)
-                shutil.move(path, os.path.join(destination, file))
-                print(f"---> {file} ---> {category}")
-                moved = True
+        # 👇 TMP-Dateien überspringen
+        if endung == ".tmp":
+            print(f"⚠️ Temporäre Datei ignoriert: {datei}")
+            return
+
+        verschoben = False
+        for kategorie, endungen in kategorien.items():
+            if endung in endungen:
+                zielordner = os.path.join(ziel, kategorie)
+                os.makedirs(zielordner, exist_ok=True)
+                shutil.move(pfad, os.path.join(zielordner, datei))
+                print(f"→ {datei} → {kategorie}")
+                verschoben = True
                 break
 
-        if not moved:
-            destination = os.path.join(destination_dir, "Sonstiges")
-            os.makedirs(destination, exist_ok=True)
-            shutil.move(path, os.path.join(destination, file))
-            print(f"---> {file} ---> Sonstiges")
-
+        if not verschoben:
+            zielordner = os.path.join(ziel, "Sonstiges")
+            os.makedirs(zielordner, exist_ok=True)
+            shutil.move(pfad, os.path.join(zielordner, datei))
+            print(f"→ {datei} → Sonstiges")
 
 class Handler(FileSystemEventHandler):
     def on_created(self, event):
         if not event.is_directory:
-            sort_file(event.src_path)
-
+            time.sleep(1)  # kleine Pause, falls Datei noch geschrieben wird
+            sortiere_datei(event.src_path)
 
 if __name__ == "__main__":
-    print("Überwachung des Download-Ordners gestartet...")
+    print(f"📂 Überwache Ordner: {quelle}")
+    print(f"📂 Sortiere Dateien nach: {ziel}")
     event_handler = Handler()
     observer = Observer()
-    observer.schedule(event_handler, source_dir, recursive=False)
+    observer.schedule(event_handler, quelle, recursive=False)
     observer.start()
 
     try:
