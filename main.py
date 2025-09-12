@@ -47,9 +47,9 @@ def sortiere_datei(pfad):
         _, endung = os.path.splitext(datei)
         endung = endung.lower()
 
-        # 👇 TMP-Dateien überspringen
+        # 👇 TMP-Dateien komplett ignorieren
         if endung == ".tmp":
-            print(f"⚠️ Temporäre Datei ignoriert: {datei}")
+            print(f"⏭️ Ignoriere temporäre Datei: {datei}")
             return
 
         # 👇 Erst warten, bis Datei fertig ist
