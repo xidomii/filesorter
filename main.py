@@ -47,8 +47,8 @@ def sortiere_datei(pfad):
         _, endung = os.path.splitext(datei)
         endung = endung.lower()
 
-        # 👇 TMP-Dateien komplett ignorieren
-        if endung == ".tmp":
+        # 👇 Temporäre Dateien komplett ignorieren
+        if endung in [".tmp", ".crdownload", ".part"]:
             print(f"⏭️ Ignoriere temporäre Datei: {datei}")
             return
 
@@ -77,6 +77,16 @@ class Handler(FileSystemEventHandler):
     def on_created(self, event):
         if not event.is_directory:
             sortiere_datei(event.src_path)
+
+    def on_moved(self, event):
+        if not event.is_directory:
+            sortiere_datei(event.dest_path)  # 👈 Verschiebe neue Datei nach Umbenennung
+
+    def on_modified(self, event):
+        if not event.is_directory:
+            # 👇 nur wenn Datei noch im Downloads-Ordner liegt
+            if os.path.dirname(event.src_path) == quelle:
+                sortiere_datei(event.src_path)
 
 if __name__ == "__main__":
     print(f"📂 Überwache Ordner: {quelle}")
