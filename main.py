@@ -20,6 +20,27 @@ kategorien = {
     "Sonstiges": []
 }
 
+def warte_bis_fertig(pfad, timeout=30):
+    """Wartet, bis die Datei fertig geschrieben ist (Größe bleibt stabil)."""
+    letzte_groesse = -1
+    start = time.time()
+
+    while True:
+        try:
+            aktuelle_groesse = os.path.getsize(pfad)
+        except FileNotFoundError:
+            return False  # Datei verschwunden
+
+        if aktuelle_groesse == letzte_groesse:
+            return True  # Datei ist stabil = fertig
+
+        letzte_groesse = aktuelle_groesse
+        time.sleep(1)
+
+        if time.time() - start > timeout:
+            print(f"⚠️ Timeout: {os.path.basename(pfad)} wird vielleicht noch benutzt.")
+            return False
+
 def sortiere_datei(pfad):
     if os.path.isfile(pfad):
         datei = os.path.basename(pfad)
@@ -31,13 +52,18 @@ def sortiere_datei(pfad):
             print(f"⚠️ Temporäre Datei ignoriert: {datei}")
             return
 
+        # 👇 Erst warten, bis Datei fertig ist
+        if not warte_bis_fertig(pfad):
+            print(f"⚠️ Datei konnte nicht verschoben werden: {datei}")
+            return
+
         verschoben = False
         for kategorie, endungen in kategorien.items():
             if endung in endungen:
                 zielordner = os.path.join(ziel, kategorie)
                 os.makedirs(zielordner, exist_ok=True)
                 shutil.move(pfad, os.path.join(zielordner, datei))
-                print(f"→ {datei} → {kategorie}")
+                print(f"✅ {datei} → {kategorie}")
                 verschoben = True
                 break
 
@@ -45,12 +71,11 @@ def sortiere_datei(pfad):
             zielordner = os.path.join(ziel, "Sonstiges")
             os.makedirs(zielordner, exist_ok=True)
             shutil.move(pfad, os.path.join(zielordner, datei))
-            print(f"→ {datei} → Sonstiges")
+            print(f"✅ {datei} → Sonstiges")
 
 class Handler(FileSystemEventHandler):
     def on_created(self, event):
         if not event.is_directory:
-            time.sleep(1)  # kleine Pause, falls Datei noch geschrieben wird
             sortiere_datei(event.src_path)
 
 if __name__ == "__main__":
