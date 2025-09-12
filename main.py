@@ -4,19 +4,18 @@ import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-# Benutzername anpassen!
+
 benutzername = "ibinc"
 
-# Quell- und Zielordner
 quelle = f"C:/Users/{benutzername}/Downloads"
-ziel = f"C:/Users/{benutzername}/SortierterDownload"  # neuer Zielordner
+ziel = f"C:/Users/{benutzername}/SortierterDownload" 
 
-# Kategorien
+
 kategorien = {
-    "Bilder": [".jpg", ".png", ".jpeg", ".gif"],
+    "Bilder": [".jpg", ".png", ".jpeg", ".gif", ".webp"],
     "Musik": [".mp3", ".wav", ".flac"],
     "Dokumente": [".pdf", ".docx", ".txt"],
-    "Videos": [".mp4", ".mov", ".avi"],
+    "Videos": [".mp4", ".mov", ".avi", ".webm"],
     "Sonstiges": []
 }
 
@@ -29,10 +28,10 @@ def warte_bis_fertig(pfad, timeout=30):
         try:
             aktuelle_groesse = os.path.getsize(pfad)
         except FileNotFoundError:
-            return False  # Datei verschwunden
+            return False
 
         if aktuelle_groesse == letzte_groesse:
-            return True  # Datei ist stabil = fertig
+            return True
 
         letzte_groesse = aktuelle_groesse
         time.sleep(1)
@@ -47,12 +46,12 @@ def sortiere_datei(pfad):
         _, endung = os.path.splitext(datei)
         endung = endung.lower()
 
-        # 👇 Temporäre Dateien komplett ignorieren
+       
         if endung in [".tmp", ".crdownload", ".part"]:
             print(f"⏭️ Ignoriere temporäre Datei: {datei}")
             return
 
-        # 👇 Erst warten, bis Datei fertig ist
+       
         if not warte_bis_fertig(pfad):
             print(f"⚠️ Datei konnte nicht verschoben werden: {datei}")
             return
@@ -80,11 +79,11 @@ class Handler(FileSystemEventHandler):
 
     def on_moved(self, event):
         if not event.is_directory:
-            sortiere_datei(event.dest_path)  # 👈 Verschiebe neue Datei nach Umbenennung
+            sortiere_datei(event.dest_path)  
 
     def on_modified(self, event):
         if not event.is_directory:
-            # 👇 nur wenn Datei noch im Downloads-Ordner liegt
+           
             if os.path.dirname(event.src_path) == quelle:
                 sortiere_datei(event.src_path)
 
