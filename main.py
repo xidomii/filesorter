@@ -16,6 +16,8 @@ kategorien = {
     "Musik": [".mp3", ".wav", ".flac"],
     "Dokumente": [".pdf", ".docx", ".txt"],
     "Videos": [".mp4", ".mov", ".avi", ".webm"],
+    "Archive": [".zip", ".rar", ".7z", ".tar", ".gz"],
+    "Anwendungen": [".exe", ".msi", ".dmg"],
     "Sonstiges": []
 }
 
